@@ -20,14 +20,25 @@ This project is designed to simplify the process of interacting with YouTube con
 ## Libraries and Technologies Used
 - Python 3.x
 - Flask for building the API.
-- Pytube for interacting with YouTube content.
+- pytubefix for interacting with YouTube content.
 - re for URL validation.
 
 ## Usage
 1. Clone this repository: `git clone https://github.com/zararashraf/youtube-video-downloader-api.git`
-2. Install the required libraries: `pip install flask pytubefix`
-3. Run the Flask application: `python main.py`
-4. Access the API endpoints using HTTP requests (e.g., POST requests in Postman).
+2. Create and activate a virtual environment (optional but recommended):
+   - **Windows:**
+     ```bash
+     python -m venv venv
+     venv\Scripts\activate
+     ```
+   - **macOS/Linux:**
+     ```bash
+     python3 -m venv venv
+     source venv/bin/activate
+     ```
+3. Install the required libraries: `pip install -r requirements.txt`
+4. Run the Flask application: `python main.py`
+5. Access the API endpoints using HTTP requests (e.g., POST requests in Postman).
 
 ## API Endpoints
 
