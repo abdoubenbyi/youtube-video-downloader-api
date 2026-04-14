@@ -22,6 +22,20 @@ This project is designed to simplify the process of interacting with YouTube con
 - Flask for building the API.
 - pytubefix for interacting with YouTube content.
 - re for URL validation.
+- flask-cors for handling CORS.
+- python-dotenv for environment variable management.
+
+## Configuration
+The application uses environment variables for configuration. Create a `.env` file in the root directory based on `.env.example`:
+
+```bash
+# Example on Windows/Linux/macOS:
+# Copy .env.example to .env and adjust as needed
+```
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `ALLOWED_ORIGINS` | Comma-separated list of allowed CORS origins | `*` |
 
 ## Usage
 1. Clone this repository: `git clone https://github.com/zararashraf/youtube-video-downloader-api.git`

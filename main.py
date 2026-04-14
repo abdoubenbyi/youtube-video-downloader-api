@@ -1,8 +1,22 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from pytubefix import YouTube
 import re
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
+
+# Configure CORS
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "*")
+if allowed_origins != "*":
+    allowed_origins = [origin.strip() for origin in allowed_origins.split(",")]
+
+CORS(app, resources={r"/*": {"origins": allowed_origins}})
+
 
 def download_video(url, resolution):
     try:
