@@ -29,8 +29,7 @@ def download_video(url, resolution):
         
         stream = yt.streams.filter(progressive=True, file_extension='mp4', resolution=resolution).first()
         if stream:
-            out_dir = f"./downloads/{url.split('v=')[1].split('&')[0]}"
-            import os
+            out_dir = f"./downloads/{yt.video_id}"
             os.makedirs(out_dir, exist_ok=True)
             stream.download(output_path=out_dir)
             return True, None
