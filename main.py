@@ -89,6 +89,23 @@ def is_valid_youtube_url(url):
     pattern = r"^(https?://)?(www\.)?youtube\.com/watch\?v=[\w-]+(&\S*)?$"
     return re.match(pattern, url) is not None
 
+import threading
+import uuid
+
+# Task tracking
+tasks = {}
+
+def download_video_task(task_id, url, resolution):
+    tasks[task_id] = {"status": "downloading", "message": "Download started"}
+    try:
+        success, error_message = download_video(url, resolution)
+        if success:
+            tasks[task_id] = {"status": "completed", "message": f"Video with resolution {resolution} downloaded successfully."}
+        else:
+            tasks[task_id] = {"status": "failed", "error": error_message}
+    except Exception as e:
+        tasks[task_id] = {"status": "failed", "error": str(e)}
+
 @app.route('/download/<resolution>', methods=['POST'])
 def download_by_resolution(resolution):
     data = request.get_json()
@@ -100,12 +117,22 @@ def download_by_resolution(resolution):
     if not is_valid_youtube_url(url):
         return jsonify({"error": "Invalid YouTube URL."}), 400
     
-    success, error_message = download_video(url, resolution)
+    task_id = str(uuid.uuid4())
+    thread = threading.Thread(target=download_video_task, args=(task_id, url, resolution))
+    thread.start()
     
-    if success:
-        return jsonify({"message": f"Video with resolution {resolution} downloaded successfully."}), 200
-    else:
-        return jsonify({"error": error_message}), 500
+    return jsonify({
+        "task_id": task_id,
+        "message": "Download started in the background.",
+        "status_url": f"/status/{task_id}"
+    }), 202
+
+@app.route('/status/<task_id>', methods=['GET'])
+def get_status(task_id):
+    task = tasks.get(task_id)
+    if not task:
+        return jsonify({"error": "Task not found."}), 404
+    return jsonify(task), 200
 
 @app.route('/video_info', methods=['POST'])
 def video_info():
