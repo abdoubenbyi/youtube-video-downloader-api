@@ -54,6 +54,15 @@ The application uses environment variables for configuration. Create a `.env` fi
 4. Run the Flask application: `python main.py`
 5. Access the API endpoints using HTTP requests (e.g., POST requests in Postman).
 
+### Running with Docker 🐳
+For a quick setup with all dependencies (including FFmpeg) pre-installed:
+
+```bash
+# Build and start the container
+docker-compose up -d
+```
+The API will be available at `http://localhost:5000`.
+
 ## API Endpoints
 
 ### Download Video by Resolution
