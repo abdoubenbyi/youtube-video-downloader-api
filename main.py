@@ -18,27 +18,54 @@ if allowed_origins != "*":
 CORS(app, resources={r"/*": {"origins": allowed_origins}})
 
 
+import ffmpeg
+
 def download_video(url, resolution):
     try:
         yt = YouTube(url)
-        
-        # Debug: Print all available streams
-        print(f"Available progressive streams for {url}:")
-        for stream in yt.streams.filter(progressive=True, file_extension='mp4'):
-            print(f"  - {stream.resolution} - {stream.mime_type}")
-        
+        out_dir = f"./downloads/{yt.video_id}"
+        os.makedirs(out_dir, exist_ok=True)
+
+        # 1. Try progressive streams (Video + Audio combined, usually up to 720p)
         stream = yt.streams.filter(progressive=True, file_extension='mp4', resolution=resolution).first()
+        
         if stream:
-            out_dir = f"./downloads/{yt.video_id}"
-            os.makedirs(out_dir, exist_ok=True)
+            print(f"Downloading progressive stream: {resolution}")
             stream.download(output_path=out_dir)
             return True, None
-        else:
-            print(f"\nTrying non-progressive streams:")
-            for stream in yt.streams.filter(file_extension='mp4', res=resolution):
-                print(f"  - {stream.resolution} - {stream.mime_type} - audio: {stream.includes_audio_track}")
+        
+        # 2. Try adaptive streams (High quality video only, needs merging with audio)
+        video_stream = yt.streams.filter(adaptive=True, file_extension='mp4', resolution=resolution, type="video").first()
+        
+        if video_stream:
+            print(f"Downloading adaptive video stream: {resolution}")
+            audio_stream = yt.streams.filter(only_audio=True, file_extension='mp4').order_by('abr').desc().first()
             
-            return False, "Video with the specified resolution not found."
+            if not audio_stream:
+                return False, "Could not find a suitable audio stream for merging."
+
+            # Download video and audio files separately
+            video_path = video_stream.download(output_path=out_dir, filename_prefix="video_")
+            audio_path = audio_stream.download(output_path=out_dir, filename_prefix="audio_")
+            
+            # Merge files using ffmpeg
+            output_filename = f"{yt.title} {resolution}.mp4".replace("/", "_").replace("\\", "_")
+            output_path = os.path.join(out_dir, output_filename)
+            
+            try:
+                video_input = ffmpeg.input(video_path)
+                audio_input = ffmpeg.input(audio_path)
+                ffmpeg.output(video_input, audio_input, output_path, vcodec='copy', acodec='aac', strict='experimental').overwrite_output().run(quiet=True)
+                
+                # Cleanup temporary files
+                os.remove(video_path)
+                os.remove(audio_path)
+                return True, None
+            except ffmpeg.Error as e:
+                return False, f"FFmpeg merge failed. Ensure FFmpeg is installed on your system. Error: {str(e)}"
+        
+        return False, f"Resolution {resolution} not found in progressive or adaptive streams."
+
     except Exception as e:
         return False, str(e)
 
